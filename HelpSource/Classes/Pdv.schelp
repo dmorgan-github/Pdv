@@ -1,0 +1,296 @@
+TITLE:: Pdv
+summary:: A mini language for creating patterns of durations and values
+categories:: Little Languages
+
+DESCRIPTION::
+A mini language for creating patterns of durations and values. The syntax was inspired by the mini notaion of TidalCycles but not intended as an exact copy or port of it.
+
+NOTE::
+You may find it convenient to create an extension to help cut down on some typing.
+code::
++ String {
+    pdv {
+        ^Pdv.parse(this)
+    }
+}
+::
+::
+
+SECTION:: Usage
+
+SUBSECTION:: Syntax
+
+code::
+
+~      - rest
+[]     - sub division or group of values
+<>     - alternating values
+{}     - chord values
+^n     - stretch duration - where n is a float
+!n     - repeat value - where n is an integer
+$      - shuffle preceding group of values
+?n     - chance of value or rest 
+         optional probability is specified with n as an integer 0-9
+         can also be used with group of values
+#(nnn) - choose one value from preceeding group of values
+         optional weights are specified within parens where n is an integer 0-9
+|      - ignored and can be used as visual separator to help readability
+,      - ignored and can be used as visual separator to help readability
+
+::
+
+SUBSECTION:: Examples
+
+Below are some basic examples to demonstrate the different operators. Alone the operators are not particularly interesting but they can be combined in interesting ways to generate sequences that would be cumbersome to write using separate Pattern classes.
+
+Note::
+A key of \g1 is added to the stream at beginning of each cycle which can then be used with Pgate
+::
+
+STRONG::Basic sequence::
+code::
+~p = Pbind(\degree, Pdv.parse("0 1 2 3")).asStream; 
+~p.nextN(4, Event.default).do({|v| v.postln;})
+  ( 'degree': 0.0, 'dur': 1.0, 'g1': true )
+  ( 'degree': 1.0, 'dur': 1.0 )
+  ( 'degree': 2.0, 'dur': 1.0 )
+  ( 'degree': 3.0, 'dur': 1.0 )
+::
+
+STRONG::Rests::
+code::
+~p = ~p = Pbind(\degree, Pdv.parse("0 1 ~ 2")).asStream;
+~p.nextN(4, Event.default).do({|v| v.postln;})
+  ( 'degree': 0.0, 'dur': 1.0, 'g1': true )
+  ( 'degree': 1.0, 'dur': 1.0 )
+  ( 'degree': 'rest', 'dur': Rest(1.0) )
+  ( 'degree': 2.0, 'dur': 1.0 )
+::
+
+STRONG::Alternating values:: (Similar to Ppatlace)
+code::
+~p = Pbind(\degree, Pdv.parse("0 <1 2>")).asStream;
+~p.nextN(4, Event.default).do({|v| v.postln;})
+  ( 'degree': 0.0, 'dur': 1.0, 'g1': true )
+  ( 'degree': 1.0, 'dur': 1.0 )
+  ( 'degree': 0.0, 'dur': 1.0, 'g1': true )
+  ( 'degree': 2.0, 'dur': 1.0 )
+::
+  
+STRONG::Alternating values with grouping::
+code::
+~p = Pbind(\degree, Pdv.parse("0 <1 [2 3]>")).asStream;
+~p.nextN(5, Event.default).do({|v| v.postln;})
+  ( 'degree': 0.0, 'dur': 1.0, 'g1': true )
+  ( 'degree': 1.0, 'dur': 1.0 )
+  ( 'degree': 0.0, 'dur': 1.0, 'g1': true )
+  ( 'degree': 2.0, 'dur': 0.5 )
+  ( 'degree': 3.0, 'dur': 0.5 )
+::
+
+STRONG::Alternating values with stretched durs::
+code::
+~p = Pbind(\degree, Pdv.parse("0 <1 [2 3]>^2")).asStream;
+~p.nextN(5, Event.default).do({|v| v.postln;})
+  ( 'degree': 0.0, 'dur': 1.0, 'g1': true )
+  ( 'degree': 1.0, 'dur': 2.0 )
+  ( 'degree': 0.0, 'dur': 1.0, 'g1': true )
+  ( 'degree': 2.0, 'dur': 1.0 )
+  ( 'degree': 3.0, 'dur': 1.0 )
+::
+
+STRONG::Sub divisions::
+code::
+~p = Pbind(\degree, Pdv.parse("0 1 [2 3]")).asStream;
+~p.nextN(4, Event.default).do({|v| v.postln;})
+  ( 'degree': 0.0, 'dur': 1.0, 'g1': true )
+  ( 'degree': 1.0, 'dur': 1.0 )
+  ( 'degree': 2.0, 'dur': 0.5 )
+  ( 'degree': 3.0, 'dur': 0.5 )
+::
+
+STRONG::Nested sub division::
+code::
+~p = Pbind(\degree, Pdv.parse("0 1 [2 [3 4]]")).asStream;
+~p.nextN(5, Event.default).do({|v| v.postln;})
+  ( 'degree': 0.0, 'dur': 1.0, 'g1': true )
+  ( 'degree': 1.0, 'dur': 1.0 )
+  ( 'degree': 2.0, 'dur': 0.5 )
+  ( 'degree': 3.0, 'dur': 0.25 )
+  ( 'degree': 4.0, 'dur': 0.25 )
+::
+
+STRONG::Nested sub divisions with alternating values::
+code::
+~p = Pbind(\degree, Pdv.parse("0 1 [2 [3 <4 5>]]")).asStream;
+~p.nextN(10, Event.default).do({|v| v.postln;})
+  ( 'degree': 0.0, 'dur': 1.0, 'g1': true )
+  ( 'degree': 1.0, 'dur': 1.0 )
+  ( 'degree': 2.0, 'dur': 0.5 )
+  ( 'degree': 3.0, 'dur': 0.25 )
+  ( 'degree': 4.0, 'dur': 0.25 )
+  ( 'degree': 0.0, 'dur': 1.0, 'g1': true )
+  ( 'degree': 1.0, 'dur': 1.0 )
+  ( 'degree': 2.0, 'dur': 0.5 )
+  ( 'degree': 3.0, 'dur': 0.25 )
+  ( 'degree': 5.0, 'dur': 0.25 )
+::
+
+STRONG::Nested sub divisions with alternating values with a nested sub division::
+code::
+~p = Pbind(\degree, Pdv.parse("0 1 [2 [3 <4 [5 6]>]]")).asStream;
+~p.nextN(11, Event.default).do({|v| v.postln;})
+  ( 'degree': 0.0, 'dur': 1.0, 'g1': true )
+  ( 'degree': 1.0, 'dur': 1.0 )
+  ( 'degree': 2.0, 'dur': 0.5 )
+  ( 'degree': 3.0, 'dur': 0.25 )
+  ( 'degree': 4.0, 'dur': 0.25 )
+  ( 'degree': 0.0, 'dur': 1.0, 'g1': true )
+  ( 'degree': 1.0, 'dur': 1.0 )
+  ( 'degree': 2.0, 'dur': 0.5 )
+  ( 'degree': 3.0, 'dur': 0.25 )
+  ( 'degree': 5.0, 'dur': 0.125 )
+  ( 'degree': 6.0, 'dur': 0.125 )
+::
+  
+STRONG::Sub division stretched::
+code::
+~p = Pbind(\degree, Pdv.parse("0 1 [2 3 4]^2")).asStream;
+~p.nextN(5, Event.default).do({|v| v.postln;})
+  ( 'degree': 0.0, 'dur': 1.0, 'g1': true )
+  ( 'degree': 1.0, 'dur': 1.0 )
+  ( 'degree': 2.0, 'dur': 0.66666666666667 )
+  ( 'degree': 3.0, 'dur': 0.66666666666667 )
+  ( 'degree': 4.0, 'dur': 0.66666666666667 )
+::
+
+STRONG::Repeated value::
+
+(Note: The repeat operator will change the duration of the value)
+code::
+~p = Pbind(\degree, Pdv.parse("0!4 1")).asStream;
+~p.nextN(5, Event.default).do({|v| v.postln;})
+  ( 'degree': 0.0, 'dur': 0.25, 'g1': true )
+  ( 'degree': 0.0, 'dur': 0.25 )
+  ( 'degree': 0.0, 'dur': 0.25 )
+  ( 'degree': 0.0, 'dur': 0.25 )
+  ( 'degree': 1.0, 'dur': 1.0 )
+::
+ 
+STRONG::Shuffled values::
+code::
+~p = Pbind(\degree, Pdv.parse("[0 1 2 3]$"))
+::
+Equivalent to 
+code::
+Pbind(\degree, Pshuf([ 1, 3, 2, 0 ], inf), \dur, 0.25)
+::
+  
+STRONG::Randomly selected value::
+code::
+~p = Pbind(\degree, Pdv.parse("[0 1 2 3]#"))
+::
+Equivalent to
+code::
+Pbind(\degree, Prand([0, 1, 2, 3], inf), \dur, 1)
+::
+
+STRONG::Optionally provide weights to values::
+code::
+~p = Pbind(\degree, Pdv.parse("[0 1 2 3]#(4321)"))
+::
+Equivalent to
+code::
+Pbind(\degree, Pwrand([0, 1, 2, 3], [4, 3, 2, 1].normalizeSum, inf), \dur, 1)
+::
+
+STRONG::Probability::
+code::
+~p = Pbind(\degree, Pdv.parse("0?4 1?3 2?9 3?0")).asStream;
+~p.nextN(8, Event.default).do({|v| v.postln;})
+  ( 'degree': rest, 'dur': Rest(1.0), 'g1': true )
+  ( 'degree': rest, 'dur': Rest(1.0) )  
+  ( 'degree': 2.0, 'dur': 1.0 )
+  ( 'degree': rest, 'dur': Rest(1.0) )
+  ( 'degree': rest, 'dur': Rest(1.0), 'g1': true )
+  ( 'degree': 1.0, 'dur': 1.0 )
+  ( 'degree': 2.0, 'dur': 1.0 )
+  ( 'degree': rest, 'dur': Rest(1.0) )
+::
+ 
+STRONG::Probability with a group::
+
+A single value will be selected with the specified probability
+code::
+~p = Pbind(\degree, Pdv.parse("[0 1 2 3]?4")).asStream;
+~p.nextN(4, Event.default).do({|v| v.postln;})
+  ( 'degree': 0.0, 'dur': 0.25, 'g1': true )
+  ( 'degree': 1.0, 'dur': 0.25 )
+  ( 'degree': 2.0, 'dur': 0.25 )
+  ( 'degree': rest, 'dur': Rest(0.25) )
+::  
+
+STRONG::Chords::
+
+Multiple values can be played simultaneously.
+code::
+~p = Pbind(\degree, Pdv.parse("{0 2 4}")).asStream;
+~p.next(Event.default).postln
+  ( 'degree': [ 0.0, 2.0, 4.0 ], 'dur': 1.0, 'g1': true )
+::
+
+STRONG::Chord with random and alternating values::
+code::
+~p = Pbind(\degree, Pdv.parse("0 {2 [3 4]# <6 8>}")).asStream;
+~p.nextN(6, Event.default).do({|v| v.postln;})
+  ( 'degree': [ 2.0, 4.0, 6.0 ], 'dur': 1.0, 'g1': true )
+  ( 'degree': [ 2.0, 3.0, 8.0 ], 'dur': 1.0, 'g1': true )
+  ( 'degree': [ 2.0, 3.0, 6.0 ], 'dur': 1.0, 'g1': true )
+  ( 'degree': [ 2.0, 3.0, 8.0 ], 'dur': 1.0, 'g1': true )
+  ( 'degree': [ 2.0, 4.0, 6.0 ], 'dur': 1.0, 'g1': true )
+  ( 'degree': [ 2.0, 3.0, 8.0 ], 'dur': 1.0, 'g1': true )
+::
+
+STRONG::Combining operators::
+
+A somewhat convoluted example of the syntax. But it should be apparent that operators can be combined in interesting ways to create complex sequences which would be cumbersome to create with the usual Pattern classes.
+
+code::
+~p = Pbind(\degree, Pdv.parse("0 <1?4 2?8> [7 6 5 4]$ {3 [4 5]# <6 8>}")).asStream;
+~p.nextN(15, Event.default).do({|v| v.postln;})
+( 'degree': 0.0, 'dur': 1.0, 'g1': true )
+( 'degree': rest, 'dur': Rest(1.0) )
+( 'degree': 4.0, 'dur': 0.25 )
+( 'degree': 7.0, 'dur': 0.25 )
+( 'degree': 5.0, 'dur': 0.25 )
+( 'degree': 6.0, 'dur': 0.25 )
+( 'degree': [ 3.0, 5.0, 6.0 ], 'dur': 1.0 )
+( 'degree': 0.0, 'dur': 1.0, 'g1': true )
+( 'degree': 2.0, 'dur': 1.0 )
+( 'degree': 6.0, 'dur': 0.25 )
+( 'degree': 7.0, 'dur': 0.25 )
+( 'degree': 5.0, 'dur': 0.25 )
+( 'degree': 4.0, 'dur': 0.25 )
+( 'degree': [ 3.0, 4.0, 8.0 ], 'dur': 1.0 )
+::
+
+
+CLASSMETHODS::
+
+METHOD:: parse
+
+ARGUMENT:: str
+
+The formatted string to parse into a pattern.
+
+returns:: Prout
+
+PRIVATE:: new
+
+PRIVATE:: rout
+
+PRIVATE:: sequence
+
+PRIVATE:: tokenize
+
+
