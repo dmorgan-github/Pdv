@@ -1,6 +1,6 @@
 (
 	\name: 			"Pdv",
-	\summary:		"Mini language for generating patterns of durations and values",
+	\summary:		"Mini pattern language for generating patterns of durations and values",
 	\author: 		"David Morgan",
 	\country: 		"USA",
 	\since: 		"2023"

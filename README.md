@@ -1,5 +1,5 @@
 # Pdv
-A mini language for creating patterns of durations and values. The syntax was inspired by the mini notaion of TidalCycles but not intended as an exact copy or port of it.
+A mini pattern language for creating patterns of durations and values. The syntax was inspired by the mini notaion of TidalCycles but not intended as an exact copy or port of it.
 
 ## Installation
 
