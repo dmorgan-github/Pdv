@@ -1,6 +1,13 @@
 # Pdv
 A mini language for creating patterns of durations and values. The syntax was inspired by the mini notaion of TidalCycles but not intended as an exact copy or port of it.
 
+## Installation
+
+```
+Quarks.install("https://github.com/dmorgan-github/Pdv")
+thisProcess.recompile
+```
+
 ## Syntax
 
 ```
@@ -18,9 +25,9 @@ $      - shuffle group of values
 ,      - can be used as visual separator to help readability
 ```
 
-## Examples
+## Example
 
-Here is a somewhat convoluted example of the syntax. But it should be apparent that operators can be combined in interesting ways to create complex sequences which would be cumbersome to create with the usual Pattern classes.
+Here is a somewhat convoluted example. But it should be apparent that operators can be combined in interesting ways to create complex sequences which would be cumbersome to create with the usual Pattern classes.
 
 ```
 ~p = Pbind(\degree, Pdv.parse("0 <1?4 2?8> [7 6 5 4]$ {3 [4 5]# <6 8>}")).asStream;
